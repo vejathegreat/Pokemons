@@ -2,7 +2,6 @@ package com.velaphi.pokemons.core
 
 /**
  * A sealed class representing the result of an operation.
- * This follows the functional programming pattern for handling success and error cases.
  */
 sealed class Result<out T> {
     /**
@@ -29,20 +28,6 @@ sealed class Result<out T> {
      * Returns true if this is an Error result.
      */
     fun isError(): Boolean = this is Error
-    
-    /**
-     * Returns true if this is a Loading result.
-     */
-    fun isLoading(): Boolean = this is Loading
-    
-    /**
-     * Returns the data if this is a Success result, null otherwise.
-     */
-    fun getOrNull(): T? = if (this is Success) data else null
-    
-    /**
-     * Returns the exception if this is an Error result, null otherwise.
-     */
-    fun exceptionOrNull(): Exception? = if (this is Error) exception else null
+
 }
 

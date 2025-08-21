@@ -171,15 +171,11 @@ private fun TypesList(types: List<String>) =
 @Composable
 private fun AbilitiesList(abilities: List<Pair<String, Boolean>>) =
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        abilities.forEach { (name, isHidden) ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(name.replaceFirstChar { it.uppercase() }, Modifier.weight(1f))
-                if (isHidden) AssistChip(onClick = {}, label = { Text("Hidden") })
-            }
+        abilities.forEach { (name, _) ->
+            Text(
+                text = name.replaceFirstChar { it.uppercase() },
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 
