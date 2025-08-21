@@ -74,7 +74,7 @@ private fun PokemonDetailContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(scaffoldPadding),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item { PokemonHeader(pokemon) }
@@ -102,7 +102,7 @@ private fun PokemonHeader(pokemon: PokemonDetailResponse) = Card(
             contentDescription = "Pokemon ${pokemon.name}",
             modifier = Modifier
                 .size(200.dp)
-                .padding(bottom = 16.dp)
+                .padding(bottom = 8.dp)
         )
         Text(
             text = pokemon.name.replaceFirstChar { it.uppercase() },
@@ -114,7 +114,7 @@ private fun PokemonHeader(pokemon: PokemonDetailResponse) = Card(
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
