@@ -40,8 +40,7 @@ class InfoViewModelTest {
         Dispatchers.setMain(testDispatcher)
         mockGetPokemonDetailUseCase = mockk()
         mockSavedStateHandle = mockk()
-        
-        // Set up default mock behavior for bulbasaur
+
         coEvery { mockSavedStateHandle.get<String>("pokemonId") } returns "bulbasaur"
         coEvery { mockGetPokemonDetailUseCase.execute("bulbasaur") } returns flowOf(Result.Success(createMockPokemonDetail(
             id = 1,

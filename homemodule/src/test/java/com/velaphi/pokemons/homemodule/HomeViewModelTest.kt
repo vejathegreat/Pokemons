@@ -28,8 +28,7 @@ class HomeViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         mockGetPokemonListUseCase = mockk()
-        
-        // Set up default mock behavior for the initial loadPokemonList call
+
         coEvery { mockGetPokemonListUseCase.execute() } returns flowOf(Result.Success(emptyList<PokemonListItem>()))
         
         viewModel = HomeViewModel(mockGetPokemonListUseCase)
