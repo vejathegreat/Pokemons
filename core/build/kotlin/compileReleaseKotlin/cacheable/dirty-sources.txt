@@ -1,0 +1,7 @@
+/Users/velaphimathebula/AndroidStudioProjects/Pokemons/core/src/main/java/com/velaphi/pokemons/core/ui/CommonUI.kt
+/Users/velaphimathebula/AndroidStudioProjects/Pokemons/core/src/main/java/com/velaphi/pokemons/core/Result.kt
+/Users/velaphimathebula/AndroidStudioProjects/Pokemons/core/src/main/java/com/velaphi/pokemons/core/NetworkResult.kt
+/Users/velaphimathebula/AndroidStudioProjects/Pokemons/core/src/main/java/com/velaphi/pokemons/core/BaseRepository.kt
+/Users/velaphimathebula/AndroidStudioProjects/Pokemons/core/src/main/java/com/velaphi/pokemons/core/ui/NetworkErrorUI.kt
+/Users/velaphimathebula/AndroidStudioProjects/Pokemons/core/src/main/java/com/velaphi/pokemons/core/NetworkUtils.kt
+/Users/velaphimathebula/AndroidStudioProjects/Pokemons/core/src/main/java/com/velaphi/pokemons/core/BaseUseCase.kt
