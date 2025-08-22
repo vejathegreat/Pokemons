@@ -35,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -177,6 +178,8 @@ private fun PokemonCard(
                 model = "${StringConstants.POKEMON_IMAGE_BASE_URL}${pokemon.getId()}.png",
                 contentDescription = pokemon.name,
                 contentScale = ContentScale.Fit,
+                placeholder = painterResource(R.drawable.ic_pokemon_placeholder),
+                error = painterResource(R.drawable.ic_pokemon_error),
                 modifier = Modifier
                     .size(96.dp)
                     .padding(bottom = 8.dp)
