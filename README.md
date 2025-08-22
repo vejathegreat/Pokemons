@@ -215,11 +215,6 @@ The app uses the [PokeAPI](https://pokeapi.co/) which is free and doesn't requir
 - **Background processing** with Coroutines
 - **Minimal network calls** with smart caching
 
-### **Memory Management**
-- **Image caching** strategies
-- **Efficient data structures**
-- **Background task management**
-
 ## 🔒 Security
 
 ### **Network Security**
@@ -275,12 +270,11 @@ The app uses the [PokeAPI](https://pokeapi.co/) which is free and doesn't requir
 - [ ] **Localization** support
 
 ### **Technical Improvements**
-- [ ] **Paging3** for large lists
-- [ ] **WorkManager** for background tasks
-- [ ] **DataStore** for preferences
-- [ ] **Biometric authentication**
-- [ ] **Deep linking** implementation
-- [ ] **Widget support**
+- [ ] - **Deep linking** implementation
+- [ ] - **Widget support**
+- [ ] - **Shimmer placeholders for smoother loading instead of blank placeholders**
+- [ ] - **Centralized error handling across all screens**
+- [ ] - **CI/CD pipeline example for automated build and tests**
 
 ## 🤝 Contributing
 
@@ -296,11 +290,6 @@ The app uses the [PokeAPI](https://pokeapi.co/) which is free and doesn't requir
 - **Compose best practices**
 - **Material3 design patterns**
 - **Accessibility guidelines**
-
-### **Future Updates**
-- **Shimmer placeholders for smoother loading instead of blank placeholders**
-- **Centralized error handling across all screens**
-- **CI/CD pipeline example for automated build and tests**
 
 ## 📄 License
 
