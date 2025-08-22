@@ -54,15 +54,19 @@ fun InfoScreen(
 
                 is InfoUiState.Error -> {
                     if (currentState.isNetworkError) {
-                        NetworkErrorContent(
-                            message = currentState.message,
-                            onRetry = viewModel::refresh
-                        )
+                        currentState.message?.let {
+                            NetworkErrorContent(
+                                message = it,
+                                onRetry = viewModel::refresh
+                            )
+                        }
                     } else {
-                        SimpleErrorContent(
-                            message = currentState.message,
-                            onRetry = viewModel::refresh
-                        )
+                        currentState.message?.let {
+                            SimpleErrorContent(
+                                message = it,
+                                onRetry = viewModel::refresh
+                            )
+                        }
                     }
                 }
             }

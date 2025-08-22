@@ -4,18 +4,19 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.velaphi.pokemons.core.Result
+import com.velaphi.pokemons.infomodule.constants.InfoConstants.ERROR_NETWORK
+import com.velaphi.pokemons.infomodule.constants.InfoConstants.ERROR_NO_INTERNET
+import com.velaphi.pokemons.infomodule.constants.InfoConstants.ERROR_TIMEOUT
+import com.velaphi.pokemons.infomodule.constants.InfoConstants.ERROR_UNKNOWN
+import com.velaphi.pokemons.infomodule.constants.InfoConstants.KEY_POKEMON_ID
+import com.velaphi.pokemons.infomodule.constants.InfoConstants.KEY_POKEMON_ID_ERROR
 import com.velaphi.pokemons.network.model.PokemonDetailResponse
 import com.velaphi.pokemons.network.usecase.GetPokemonDetailUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel for the Info screen.
- * Manages state of Pokemon detail and user interactions.
- */
 @HiltViewModel
 class InfoViewModel @Inject constructor(
     private val getPokemonDetailUseCase: GetPokemonDetailUseCase,
@@ -26,69 +27,45 @@ class InfoViewModel @Inject constructor(
     val uiState: StateFlow<InfoUiState> = _uiState.asStateFlow()
 
     private val pokemonId: String =
-        savedStateHandle.get<String>("pokemonId")
-            ?: error("Pokemon ID is required in SavedStateHandle")
-
-    private var loadJob: Job? = null
+        savedStateHandle.get<String>(KEY_POKEMON_ID)
+            ?: error(KEY_POKEMON_ID_ERROR)
 
     init {
         loadPokemonDetail()
     }
 
-    /**
-     * Load the Pokemon detail from the API.
-     */
     fun loadPokemonDetail() {
-        loadJob?.cancel()
-        loadJob = viewModelScope.launch {
+        viewModelScope.launch {
             getPokemonDetailUseCase.execute(pokemonId)
                 .onStart { _uiState.value = InfoUiState.Loading }
-                .catch { e ->
-                    val isNetworkError = e.message?.contains("No internet connection", ignoreCase = true) == true ||
-                                       e.message?.contains("network", ignoreCase = true) == true ||
-                                       e.message?.contains("timeout", ignoreCase = true) == true
-                    
-                    _uiState.value = InfoUiState.Error(
-                        message = e.message ?: "Unexpected error occurred",
-                        isNetworkError = isNetworkError,
-                        isRetryable = true
-                    )
-                }
-                .collect { result ->
+                .catch { e -> _uiState.value = InfoUiState.Error(e.message, e.isNetworkError()) }
+                .collectLatest { result ->
                     _uiState.value = when (result) {
                         is Result.Success -> InfoUiState.Success(result.data)
-                        is Result.Error -> {
-                            val exception = result.exception
-                            val isNetworkError = exception.message?.contains("No internet connection", ignoreCase = true) == true ||
-                                               exception.message?.contains("network", ignoreCase = true) == true ||
-                                               exception.message?.contains("timeout", ignoreCase = true) == true
-                            
-                            InfoUiState.Error(
-                                message = exception.message ?: "Unknown error",
-                                isNetworkError = isNetworkError,
-                                isRetryable = true
-                            )
-                        }
+                        is Result.Error -> InfoUiState.Error(
+                            message = result.exception.message,
+                            isNetworkError = result.exception.isNetworkError()
+                        )
+
                         is Result.Loading -> InfoUiState.Loading
                     }
                 }
         }
     }
 
-    /**
-     * Refresh the Pokemon detail (re-fetch).
-     */
     fun refresh() = loadPokemonDetail()
 }
 
-/**
- * UI state for the Info screen.
- */
+private fun Throwable.isNetworkError(): Boolean =
+    message?.contains(ERROR_NO_INTERNET, ignoreCase = true) == true ||
+            message?.contains(ERROR_NETWORK, ignoreCase = true) == true ||
+            message?.contains(ERROR_TIMEOUT, ignoreCase = true) == true
+
 sealed interface InfoUiState {
     object Loading : InfoUiState
     data class Success(val pokemon: PokemonDetailResponse) : InfoUiState
     data class Error(
-        val message: String,
+        val message: String? = ERROR_UNKNOWN,
         val isNetworkError: Boolean = false,
         val isRetryable: Boolean = true
     ) : InfoUiState

@@ -1,6 +1,5 @@
 package com.velaphi.pokemons.network.usecase
 
-import com.velaphi.pokemons.core.BaseUseCaseNoParams
 import com.velaphi.pokemons.core.Result
 import com.velaphi.pokemons.network.model.PokemonListItem
 import com.velaphi.pokemons.network.repository.PokemonRepository
@@ -10,15 +9,23 @@ import javax.inject.Singleton
 
 @Singleton
 class GetPokemonListUseCase @Inject constructor(
-    private val pokemonRepository: PokemonRepository
-) : BaseUseCaseNoParams<List<PokemonListItem>> {
-    
+    private val repository: PokemonRepository
+) {
+
     /**
-     * Execute the use case to get the Pokemon list.
-     * @return Flow of Result containing the list of Pokemon or error
+     * Execute the use case to fetch a paginated list of Pokemon.
+     *
+     * @param limit The maximum number of items to fetch (default 150)
+     * @param offset The pagination offset (default 0)
+     * @return Flow emitting Result with a list of Pokemon or error
      */
-    override suspend fun execute(): Flow<Result<List<PokemonListItem>>> {
-        return pokemonRepository.getAll()
+    operator fun invoke(
+        limit: Int = DEFAULT_LIMIT,
+        offset: Int = DEFAULT_OFFSET
+    ): Flow<Result<List<PokemonListItem>>> = repository.getAll(limit, offset)
+
+    private companion object {
+        const val DEFAULT_LIMIT = 151
+        const val DEFAULT_OFFSET = 0
     }
 }
-

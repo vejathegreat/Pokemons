@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import androidx.compose.ui.res.stringResource
 
 /**
  * Splash screen composable with Pokemon theme and animations.
@@ -32,19 +33,13 @@ fun SplashScreen(
         animationSpec = tween(durationMillis = 2000),
         label = "Alpha Animation"
     )
-    
+
     val scaleAnim = animateFloatAsState(
         targetValue = if (startAnimation) 1f else 0.3f,
         animationSpec = tween(durationMillis = 1000),
         label = "Scale Animation"
     )
-    
-    val rotationAnim = animateFloatAsState(
-        targetValue = if (startAnimation) 360f else 0f,
-        animationSpec = tween(durationMillis = 2000, easing = EaseOutCubic),
-        label = "Rotation Animation"
-    )
-    
+
     val infiniteRotation = rememberInfiniteTransition(label = "Infinite Rotation")
     val continuousRotation by infiniteRotation.animateFloat(
         initialValue = 0f,
@@ -55,13 +50,13 @@ fun SplashScreen(
         ),
         label = "Continuous Rotation"
     )
-    
+
     LaunchedEffect(key1 = true) {
         startAnimation = true
         delay(3000L)
         onSplashComplete()
     }
-    
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -76,13 +71,12 @@ fun SplashScreen(
             ),
         contentAlignment = Alignment.Center
     ) {
-        // Background Pokemon silhouettes
         repeat(6) { index ->
             val angle = (index * 60f + continuousRotation) * (Math.PI / 180f)
             val radius = 200.dp
             val x = (kotlin.math.cos(angle) * radius.value).dp
             val y = (kotlin.math.sin(angle) * radius.value).dp
-            
+
             // Background Pokemon silhouettes - using a simple circle for now
             Box(
                 modifier = Modifier
@@ -96,7 +90,7 @@ fun SplashScreen(
                     )
             )
         }
-        
+
         // Main content
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -115,19 +109,19 @@ fun SplashScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "⚡",
+                    text = stringResource(R.string.splash_lightning_emoji),
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontSize = 48.sp
                     ),
                     color = MaterialTheme.colorScheme.primary
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             // App name with fade-in animation
             Text(
-                text = "Pokédex",
+                text = stringResource(R.string.splash_pokedex_title),
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontSize = 36.sp,
                     fontWeight = FontWeight.Bold
@@ -138,12 +132,12 @@ fun SplashScreen(
                     .alpha(alphaAnim.value)
                     .scale(scaleAnim.value)
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Subtitle with delayed animation
             Text(
-                text = "Catch 'em all!",
+                text = stringResource(R.string.splash_catch_em_all),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium
@@ -154,9 +148,9 @@ fun SplashScreen(
                     .alpha(alphaAnim.value)
                     .scale(scaleAnim.value)
             )
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
+
             // Loading indicator
             androidx.compose.material3.CircularProgressIndicator(
                 color = Color.White,
@@ -165,11 +159,16 @@ fun SplashScreen(
                     .alpha(alphaAnim.value)
             )
         }
-        
-                // Floating Pokemon elements
+
+        // Floating Pokemon elements
         repeat(3) { index ->
             val delayMs = index * 500
-            val infiniteFloat = rememberInfiniteTransition(label = "Float Animation $index")
+            val infiniteFloat = rememberInfiniteTransition(
+                label = stringResource(
+                    R.string.splash_float_animation,
+                    index
+                )
+            )
             val floatAnim by infiniteFloat.animateFloat(
                 initialValue = -50f,
                 targetValue = 50f,
@@ -179,11 +178,11 @@ fun SplashScreen(
                 ),
                 label = "Float $index"
             )
-            
+
             LaunchedEffect(key1 = Unit) {
                 delay(delayMs.toLong())
             }
-            
+
             // Floating Pokemon elements - using colored circles
             Box(
                 modifier = Modifier

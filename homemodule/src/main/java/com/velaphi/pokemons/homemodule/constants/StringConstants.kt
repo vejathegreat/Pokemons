@@ -23,7 +23,6 @@ object StringConstants {
     const val KEYWORD_TIMEOUT = "timeout"
     const val KEYWORD_SERVER = "server"
     const val KEYWORD_NETWORK = "network"
-    
-    // Default values
-    const val DEFAULT_NAME = "Android"
+
+
 }

@@ -297,6 +297,11 @@ The app uses the [PokeAPI](https://pokeapi.co/) which is free and doesn't requir
 - **Material3 design patterns**
 - **Accessibility guidelines**
 
+### **Future Updates**
+- **Shimmer placeholders for smoother loading instead of blank placeholders**
+- **Centralized error handling across all screens**
+- **CI/CD pipeline example for automated build and tests**
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

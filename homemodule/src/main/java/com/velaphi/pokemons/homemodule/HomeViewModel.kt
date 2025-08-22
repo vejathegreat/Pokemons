@@ -3,115 +3,177 @@ package com.velaphi.pokemons.homemodule
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.velaphi.pokemons.core.Result
+import com.velaphi.pokemons.homemodule.constants.StringConstants.KEYWORD_NETWORK
+import com.velaphi.pokemons.homemodule.constants.StringConstants.KEYWORD_NO_INTERNET
+import com.velaphi.pokemons.homemodule.constants.StringConstants.KEYWORD_TIMEOUT
+import com.velaphi.pokemons.homemodule.constants.StringConstants.UNKNOWN_ERROR
 import com.velaphi.pokemons.network.model.PokemonListItem
 import com.velaphi.pokemons.network.usecase.GetPokemonListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import com.velaphi.pokemons.homemodule.constants.StringConstants
 
-/**
- * ViewModel for the Home screen.
- * This ViewModel manages the state of the Pokemon list and handles user interactions.
- */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getPokemonListUseCase: GetPokemonListUseCase
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-    
+
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
-    
+
     private var allPokemon: List<PokemonListItem> = emptyList()
-    
+    private var currentOffset = 0
+    private val pageSize = 150
+    private var hasMoreData = true
+    private var isLoadingMore = false
+
     init {
         loadPokemonList()
+        observeSearchQuery()
     }
-    
+
     /**
-     * Load the Pokemon list from the API.
+     * Initial load of Pokemon list.
      */
     fun loadPokemonList() {
         viewModelScope.launch {
-            getPokemonListUseCase.execute().collectLatest { result ->
-                when (result) {
-                    is Result.Success -> {
-                        allPokemon = result.data
-                        _uiState.update {
-                            HomeUiState.Success(
-                                pokemonList = filterPokemon(result.data, _searchQuery.value)
-                            )
-                        }
-                    }
+            currentOffset = 0
+            hasMoreData = true
+            allPokemon = emptyList()
+            _uiState.value = HomeUiState.Loading
 
-                    is Result.Error -> {
-                        val isNetworkError = result.exception.isNetworkRelated()
-                        _uiState.update {
-                            HomeUiState.Error(
-                                message = result.exception.message ?: "Unknown error occurred",
-                                isNetworkError = isNetworkError,
-                                isRetryable = true
-                            )
-                        }
-                    }
+            getPokemonListUseCase(limit = pageSize, offset = currentOffset)
+                .collectLatest { result: Result<List<PokemonListItem>> ->
+                    handleResult(result, isInitialLoad = true)
+                }
+        }
+    }
 
-                    is Result.Loading -> {
-                        _uiState.update { HomeUiState.Loading }
+    /**
+     * Load more Pokemon for pagination.
+     */
+    fun loadMorePokemon() {
+        if (isLoadingMore || !hasMoreData) return
+
+        viewModelScope.launch {
+            isLoadingMore = true
+            _uiState.update { currentState ->
+                if (currentState is HomeUiState.Success) currentState.copy(isLoadingMore = true)
+                else currentState
+            }
+
+            getPokemonListUseCase(limit = pageSize, offset = currentOffset)
+                .collectLatest { result: Result<List<PokemonListItem>> ->
+                    handleResult(result, isInitialLoad = false)
+                }
+        }
+    }
+
+    /**
+     * Handle API result and update UI state.
+     */
+    private fun handleResult(result: Result<List<PokemonListItem>>, isInitialLoad: Boolean) {
+        when (result) {
+            is Result.Success -> {
+                val newData = result.data
+                allPokemon = if (isInitialLoad) newData else allPokemon + newData
+                hasMoreData = newData.size >= pageSize
+                currentOffset += pageSize
+                isLoadingMore = false
+
+                _uiState.update {
+                    HomeUiState.Success(
+                        pokemonList = filterPokemon(allPokemon, _searchQuery.value),
+                        hasMoreData = hasMoreData,
+                        isLoadingMore = false
+                    )
+                }
+            }
+
+            is Result.Error -> {
+                isLoadingMore = false
+                val isNetwork = result.exception.isNetworkRelated()
+                _uiState.update {
+                    if (isInitialLoad) {
+                        HomeUiState.Error(
+                            message = result.exception.message ?: UNKNOWN_ERROR,
+                            isNetworkError = isNetwork,
+                            isRetryable = true
+                        )
+                    } else {
+                        if (it is HomeUiState.Success) it.copy(isLoadingMore = false) else it
                     }
                 }
             }
-        }
-    }
-    
-    /**
-     * Update the search query and filter the Pokemon list.
-     * @param query The search query string
-     */
-    fun updateSearchQuery(query: String) {
-        _searchQuery.value = query
-        val filteredList = filterPokemon(allPokemon, query)
-        _uiState.value = HomeUiState.Success(pokemonList = filteredList)
-    }
-    
-    /**
-     * Filter Pokemon based on search query.
-     * @param pokemonList The list of all Pokemon
-     * @param query The search query
-     * @return Filtered list of Pokemon
-     */
-    private fun filterPokemon(pokemonList: List<PokemonListItem>, query: String): List<PokemonListItem> {
-        return if (query.isBlank()) {
-            pokemonList
-        } else {
-            pokemonList.filter { pokemon ->
-                pokemon.name.contains(query, ignoreCase = true) ||
-                pokemon.getId().contains(query, ignoreCase = true)
+
+            is Result.Loading -> {
+                if (isInitialLoad) _uiState.update { HomeUiState.Loading }
             }
         }
     }
-    
+
     /**
-     * Refresh the Pokemon list.
+     * Update search query (debounced).
      */
-    fun refresh() {
-        loadPokemonList()
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
     }
+
+    /**
+     * Observe debounced search queries.
+     */
+    @OptIn(FlowPreview::class)
+    private fun observeSearchQuery() {
+        _searchQuery
+            .debounce(300)
+            .distinctUntilChanged()
+            .onEach { query ->
+                _uiState.update { currentState ->
+                    if (currentState is HomeUiState.Success) {
+                        currentState.copy(pokemonList = filterPokemon(allPokemon, query))
+                    } else currentState
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    /**
+     * Filter Pokemon by name or ID.
+     */
+    private fun filterPokemon(list: List<PokemonListItem>, query: String): List<PokemonListItem> {
+        return if (query.isBlank()) list
+        else list.filter {
+            it.name.contains(query, ignoreCase = true) ||
+                    it.getId().contains(query, ignoreCase = true)
+        }
+    }
+
+    /**
+     * Refresh Pokemon list.
+     */
+    fun refresh() = loadPokemonList()
+
+    /**
+     * Check if more data can be loaded.
+     */
+    fun canLoadMore() = hasMoreData && !isLoadingMore
 }
 
 /**
- * UI state for the Home screen.
+ * Home screen UI state.
  */
 sealed class HomeUiState {
     object Loading : HomeUiState()
-    data class Success(val pokemonList: List<PokemonListItem>) : HomeUiState()
+    data class Success(
+        val pokemonList: List<PokemonListItem>,
+        val hasMoreData: Boolean = false,
+        val isLoadingMore: Boolean = false
+    ) : HomeUiState()
     data class Error(
         val message: String,
         val isNetworkError: Boolean = false,
@@ -120,15 +182,10 @@ sealed class HomeUiState {
 }
 
 /**
- * Extension function to check if an exception is network-related.
- * Uses hardcoded keywords for network error detection.
+ * Detect network-related errors.
  */
 private fun Throwable.isNetworkRelated(): Boolean {
-    val message = this.message?.lowercase() ?: return false
-    return listOf(
-        "no internet",
-        "network",
-        "timeout",
-        "server"
-    ).any { keyword -> message.contains(keyword.lowercase()) }
+    val msg = message?.lowercase() ?: return false
+    return listOf(KEYWORD_NO_INTERNET, KEYWORD_NETWORK, KEYWORD_TIMEOUT, KEYWORD_TIMEOUT).any { it in msg }
+
 }

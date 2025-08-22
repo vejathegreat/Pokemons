@@ -47,4 +47,6 @@
     <string name="server_timeout">Server timeout. Please try again later.</string>
     <string name="server_error_with_code">Server error (%d). Please try again.</string>
     <string name="no_internet_available">No internet connection available</string>
+    <string name="retry">Retry</string>
+    <string name="unknown_error_occurred">Unknown error occurred</string>
 </resources>
