@@ -39,7 +39,6 @@ class InfoViewModel @Inject constructor(
      * Load the Pokemon detail from the API.
      */
     fun loadPokemonDetail() {
-        // Cancel any ongoing job to avoid duplicate collectors
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
             getPokemonDetailUseCase.execute(pokemonId)

@@ -11,6 +11,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -18,7 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.velaphi.pokemons.network.model.PokemonListItem
 import com.velaphi.pokemons.homemodule.constants.StringConstants
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.Immutable
 
 @Composable
 fun HomeScreen(
@@ -91,9 +93,7 @@ private fun PokemonGrid(
     onPokemonClick: (String) -> Unit
 ) {
     if (pokemonList.isEmpty()) {
-        EmptyState(
-            message = stringResource(R.string.no_pokemon_found)
-        )
+        EmptyState(message = stringResource(R.string.no_pokemon_found))
     } else {
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 160.dp),
@@ -102,7 +102,10 @@ private fun PokemonGrid(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(pokemonList) { pokemon ->
+            items(
+                items = pokemonList,
+                key = { it.getId() } // ✅ stable key for recomposition
+            ) { pokemon ->
                 PokemonCard(
                     pokemon = pokemon,
                     onClick = { onPokemonClick(pokemon.getId()) }
@@ -117,6 +120,10 @@ private fun PokemonCard(
     pokemon: PokemonListItem,
     onClick: () -> Unit
 ) {
+    val displayName = remember(pokemon.name) {
+        pokemon.name.replaceFirstChar { it.uppercase() }
+    }
+
     Card(
         onClick = onClick,
         modifier = Modifier
@@ -137,10 +144,12 @@ private fun PokemonCard(
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .size(96.dp)
-                    .padding(bottom = 8.dp)
+                    .padding(bottom = 8.dp),
+                placeholder = painterResource(R.drawable.ic_pokemon_placeholder),
+                error = painterResource(R.drawable.ic_pokemon_error)
             )
             Text(
-                text = pokemon.name.replaceFirstChar { it.uppercase() },
+                text = displayName,
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center
             )
@@ -158,3 +167,11 @@ private fun PokemonCard(
  */
 private val PokemonListItem.imageUrl: String
     get() = "${StringConstants.POKEMON_IMAGE_BASE_URL}${getId()}.png"
+
+@Immutable
+data class PokemonListItem(
+    val name: String,
+    val url: String
+) {
+    fun getId(): String = url.trimEnd('/').substringAfterLast('/')
+}

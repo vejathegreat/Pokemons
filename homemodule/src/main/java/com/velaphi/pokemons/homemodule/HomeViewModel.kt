@@ -9,6 +9,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.velaphi.pokemons.homemodule.constants.StringConstants
@@ -39,30 +41,30 @@ class HomeViewModel @Inject constructor(
      */
     fun loadPokemonList() {
         viewModelScope.launch {
-            _uiState.value = HomeUiState.Loading
-            
-            getPokemonListUseCase.execute().collect { result ->
+            getPokemonListUseCase.execute().collectLatest { result ->
                 when (result) {
                     is Result.Success -> {
                         allPokemon = result.data
-                        _uiState.value = HomeUiState.Success(
-                            pokemonList = filterPokemon(result.data, _searchQuery.value)
-                        )
+                        _uiState.update {
+                            HomeUiState.Success(
+                                pokemonList = filterPokemon(result.data, _searchQuery.value)
+                            )
+                        }
                     }
+
                     is Result.Error -> {
-                        val exception = result.exception
-                        val isNetworkError = exception.message?.contains(StringConstants.KEYWORD_NO_INTERNET, ignoreCase = true) == true ||
-                                           exception.message?.contains(StringConstants.KEYWORD_NETWORK, ignoreCase = true) == true ||
-                                           exception.message?.contains(StringConstants.KEYWORD_TIMEOUT, ignoreCase = true) == true
-                        
-                        _uiState.value = HomeUiState.Error(
-                            message = exception.message ?: StringConstants.UNKNOWN_ERROR,
-                            isNetworkError = isNetworkError,
-                            isRetryable = true
-                        )
+                        val isNetworkError = result.exception.isNetworkRelated()
+                        _uiState.update {
+                            HomeUiState.Error(
+                                message = result.exception.message ?: "Unknown error occurred",
+                                isNetworkError = isNetworkError,
+                                isRetryable = true
+                            )
+                        }
                     }
+
                     is Result.Loading -> {
-                        _uiState.value = HomeUiState.Loading
+                        _uiState.update { HomeUiState.Loading }
                     }
                 }
             }
@@ -115,4 +117,18 @@ sealed class HomeUiState {
         val isNetworkError: Boolean = false,
         val isRetryable: Boolean = true
     ) : HomeUiState()
+}
+
+/**
+ * Extension function to check if an exception is network-related.
+ * Uses hardcoded keywords for network error detection.
+ */
+private fun Throwable.isNetworkRelated(): Boolean {
+    val message = this.message?.lowercase() ?: return false
+    return listOf(
+        "no internet",
+        "network",
+        "timeout",
+        "server"
+    ).any { keyword -> message.contains(keyword.lowercase()) }
 }

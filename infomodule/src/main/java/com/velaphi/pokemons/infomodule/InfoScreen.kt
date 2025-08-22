@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -27,10 +28,13 @@ fun InfoScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Pokemon Info") },
+                title = { Text(stringResource(R.string.pokemon_info_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.back_button_description)
+                        )
                     }
                 }
             )
@@ -47,6 +51,7 @@ fun InfoScreen(
                     pokemon = currentState.pokemon,
                     scaffoldPadding = paddingValues
                 )
+
                 is InfoUiState.Error -> {
                     if (currentState.isNetworkError) {
                         NetworkErrorContent(
@@ -77,12 +82,30 @@ private fun PokemonDetailContent(
         contentPadding = PaddingValues(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item { PokemonHeader(pokemon) }
-        item { SectionCard("Stats") { StatsList(pokemon.stats) } }
-        item { SectionCard("Types") { TypesList(pokemon.types.map { it.type.name }) } }
-        item { SectionCard("Abilities") { AbilitiesList(pokemon.abilities.map { it.ability.name to it.isHidden }) } }
+        item(key = "header_${pokemon.id}") {
+            PokemonHeader(pokemon)
+        }
+        item(key = "stats_${pokemon.id}") {
+            SectionCard(stringResource(R.string.stats_section_title)) {
+                StatsList(pokemon.stats)
+            }
+        }
+        item(key = "types_${pokemon.id}") {
+            SectionCard(stringResource(R.string.types_section_title)) {
+                TypesList(pokemon.types.map { it.type.name })
+            }
+        }
+        item(key = "abilities_${pokemon.id}") {
+            SectionCard(stringResource(R.string.abilities_section_title)) {
+                AbilitiesList(pokemon.abilities.map { it.ability.name to it.isHidden })
+            }
+        }
         if (pokemon.forms.isNotEmpty()) {
-            item { SectionCard("Forms") { FormsList(pokemon.forms.map { it.name }) } }
+            item(key = "forms_${pokemon.id}") {
+                SectionCard(stringResource(R.string.forms_section_title)) {
+                    FormsList(pokemon.forms.map { it.name })
+                }
+            }
         }
     }
 }
@@ -99,7 +122,7 @@ private fun PokemonHeader(pokemon: PokemonDetailResponse) = Card(
         AsyncImage(
             model = pokemon.sprites.frontDefault
                 ?: pokemon.sprites.other?.officialArtwork?.frontDefault,
-            contentDescription = "Pokemon ${pokemon.name}",
+            contentDescription = stringResource(R.string.pokemon_image_description, pokemon.name),
             modifier = Modifier
                 .size(200.dp)
                 .padding(bottom = 8.dp)
@@ -110,7 +133,10 @@ private fun PokemonHeader(pokemon: PokemonDetailResponse) = Card(
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "#${pokemon.id.toString().padStart(3, '0')}",
+            text = stringResource(
+                R.string.pokemon_id_format,
+                pokemon.id.toString().padStart(3, '0')
+            ),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -119,9 +145,20 @@ private fun PokemonHeader(pokemon: PokemonDetailResponse) = Card(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            InfoItem("Height", "${pokemon.height / 10.0}m")
-            InfoItem("Weight", "${pokemon.weight / 10.0}kg")
-            pokemon.baseExperience?.let { InfoItem("Base Exp", it.toString()) }
+            InfoItem(
+                stringResource(R.string.height_label),
+                "${pokemon.height / 10.0}${stringResource(R.string.height_unit)}"
+            )
+            InfoItem(
+                stringResource(R.string.weight_label),
+                "${pokemon.weight / 10.0}${stringResource(R.string.weight_unit)}"
+            )
+            pokemon.baseExperience?.let {
+                InfoItem(
+                    stringResource(R.string.base_exp_label),
+                    it.toString()
+                )
+            }
         }
     }
 }

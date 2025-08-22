@@ -22,7 +22,7 @@
     <string name="server_issues">The server is experiencing issues</string>
     
     <!-- UI elements -->
-    <string name="retry_button">🔄 Retry</string>
+    <string name="retry_button">Retry</string>
     <string name="no_content_available">No content available</string>
     
     <!-- Pokemon related -->
@@ -31,4 +31,20 @@
     
     <!-- Greeting -->
     <string name="greeting_message">Hello %s!</string>
+    
+    <!-- Error keywords for detection -->
+    <string name="keyword_no_internet">No internet</string>
+    <string name="keyword_timeout">timeout</string>
+    <string name="keyword_server">server</string>
+    <string name="keyword_network">network</string>
+    
+    <!-- Default values -->
+    <string name="default_name">Android</string>
+    
+    <!-- Additional error messages -->
+    <string name="unexpected_error_occurred">Unexpected error: %s</string>
+    <string name="unable_to_connect">Unable to connect to server</string>
+    <string name="server_timeout">Server timeout. Please try again later.</string>
+    <string name="server_error_with_code">Server error (%d). Please try again.</string>
+    <string name="no_internet_available">No internet connection available</string>
 </resources>

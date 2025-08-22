@@ -7,7 +7,6 @@ object StringConstants {
 
     const val UNKNOWN_ERROR = "Unknown error occurred"
 
-    
     // Emojis
     const val EMOJI_NO_INTERNET = "📶"
     const val EMOJI_TIMEOUT = "⏰"
@@ -20,7 +19,7 @@ object StringConstants {
     const val POKEMON_IMAGE_BASE_URL = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/"
     
     // Error detection keywords
-    const val KEYWORD_NO_INTERNET = "No internet"
+    const val KEYWORD_NO_INTERNET = "no internet"
     const val KEYWORD_TIMEOUT = "timeout"
     const val KEYWORD_SERVER = "server"
     const val KEYWORD_NETWORK = "network"
