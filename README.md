@@ -1,6 +1,6 @@
 # Pokédex Android App 🎮
 
-A modern, senior-level Android application built with **MVVM architecture**, **Clean Code principles**, and **multi-module structure**. This app provides a comprehensive Pokédex experience using the [PokeAPI](https://pokeapi.co/).
+A modern, Android application built with **MVVM architecture**, **Clean Code principles**, and **multi-module structure**. This app provides a comprehensive Pokédex experience using the [PokeAPI](https://pokeapi.co/).
 
 ## 🏗️ Architecture & Design Patterns
 
