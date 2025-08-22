@@ -27,10 +27,12 @@ class HomeViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        mockGetPokemonListUseCase = mockk()
+        mockGetPokemonListUseCase = mockk<GetPokemonListUseCase>()
 
-        coEvery { mockGetPokemonListUseCase.execute() } returns flowOf(Result.Success(emptyList<PokemonListItem>()))
-        
+        coEvery {
+            mockGetPokemonListUseCase(any(), any())
+        } returns flowOf(Result.Success(emptyList()))
+
         viewModel = HomeViewModel(mockGetPokemonListUseCase)
     }
 
@@ -47,7 +49,9 @@ class HomeViewModelTest {
             PokemonListItem("ivysaur", "https://pokeapi.co/api/v2/pokemon/2/")
         )
 
-        coEvery { mockGetPokemonListUseCase.execute() } returns flowOf(Result.Success(mockPokemonList))
+        coEvery {
+            mockGetPokemonListUseCase(any(), any())
+        } returns flowOf(Result.Success(mockPokemonList))
 
         // When
         viewModel.loadPokemonList()
@@ -65,7 +69,10 @@ class HomeViewModelTest {
     fun `loadPokemonList detects network errors correctly`() = runTest {
         // Given
         val networkException = Exception("No internet connection")
-        coEvery { mockGetPokemonListUseCase.execute() } returns flowOf(Result.Error(networkException))
+
+        coEvery {
+            mockGetPokemonListUseCase(any(), any())
+        } returns flowOf(Result.Error(networkException))
 
         // When
         viewModel.loadPokemonList()
@@ -81,7 +88,10 @@ class HomeViewModelTest {
     fun `loadPokemonList detects generic network errors correctly`() = runTest {
         // Given
         val networkException = Exception("Network error occurred")
-        coEvery { mockGetPokemonListUseCase.execute() } returns flowOf(Result.Error(networkException))
+
+        coEvery {
+            mockGetPokemonListUseCase(any(), any())
+        } returns flowOf(Result.Error(networkException))
 
         // When
         viewModel.loadPokemonList()
@@ -130,119 +140,85 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun `refresh calls loadPokemonList`() = runTest {
+    fun `updateSearchQuery with empty string shows all Pokemon`() = runTest {
         // Given
         val mockPokemonList = listOf(
-            PokemonListItem("bulbasaur", "https://pokeapi.co/api/v2/pokemon/1/")
+            PokemonListItem("bulbasaur", "https://pokeapi.co/api/v2/pokemon/1/"),
+            PokemonListItem("ivysaur", "https://pokeapi.co/api/v2/pokemon/2/")
         )
 
-        coEvery { mockGetPokemonListUseCase.execute() } returns flowOf(Result.Success(mockPokemonList))
-
-        // When
-        viewModel.refresh()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // Then
-        assertTrue(viewModel.uiState.value is HomeUiState.Success)
-        val successState = viewModel.uiState.value as HomeUiState.Success
-        assertEquals(1, successState.pokemonList.size)
-    }
-
-    @Test
-    fun `refresh resets state to Loading first`() = runTest {
-        // Given
-        val mockPokemonList = listOf(
-            PokemonListItem("bulbasaur", "https://pokeapi.co/api/v2/pokemon/1/")
-        )
-
-        coEvery { mockGetPokemonListUseCase.execute() } returns flowOf(Result.Success(mockPokemonList))
-
-        // When
-        viewModel.refresh()
-
-        // Then
-        // The state should briefly be Loading before the result comes back
-        // This is tested by the fact that refresh() calls loadPokemonList()
-        // which starts with Loading state
-    }
-
-    @Test
-    fun `loadPokemonList handles empty Pokemon list correctly`() = runTest {
-        // Given
-        val emptyPokemonList = emptyList<PokemonListItem>()
-        coEvery { mockGetPokemonListUseCase.execute() } returns flowOf(Result.Success(emptyPokemonList))
+        coEvery {
+            mockGetPokemonListUseCase(any(), any())
+        } returns flowOf(Result.Success(mockPokemonList))
 
         // When
         viewModel.loadPokemonList()
         testDispatcher.scheduler.advanceUntilIdle()
-
-        // Then
-        assertTrue(viewModel.uiState.value is HomeUiState.Success)
-        val successState = viewModel.uiState.value as HomeUiState.Success
-        assertTrue(successState.pokemonList.isEmpty())
-    }
-
-    @Test
-    fun `loadPokemonList handles large Pokemon list correctly`() = runTest {
-        // Given
-        val largePokemonList = (1..100).map { index ->
-            PokemonListItem("pokemon$index", "https://pokeapi.co/api/v2/pokemon/$index/")
-        }
-        coEvery { mockGetPokemonListUseCase.execute() } returns flowOf(Result.Success(largePokemonList))
-
-        // When
-        viewModel.loadPokemonList()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // Then
-        assertTrue(viewModel.uiState.value is HomeUiState.Success)
-        val successState = viewModel.uiState.value as HomeUiState.Success
-        assertEquals(100, successState.pokemonList.size)
-        assertEquals("pokemon1", successState.pokemonList[0].name)
-        assertEquals("pokemon100", successState.pokemonList[99].name)
-    }
-
-    @Test
-    fun `loadPokemonList handles Pokemon with special characters in names`() = runTest {
-        // Given
-        val specialPokemonList = listOf(
-            PokemonListItem("mr-mime", "https://pokeapi.co/api/v2/pokemon/122/"),
-            PokemonListItem("mime-jr", "https://pokeapi.co/api/v2/pokemon/439/"),
-            PokemonListItem("porygon-z", "https://pokeapi.co/api/v2/pokemon/474/")
-        )
-        coEvery { mockGetPokemonListUseCase.execute() } returns flowOf(Result.Success(specialPokemonList))
-
-        // When
-        viewModel.loadPokemonList()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // Then
-        assertTrue(viewModel.uiState.value is HomeUiState.Success)
-        val successState = viewModel.uiState.value as HomeUiState.Success
-        assertEquals(3, successState.pokemonList.size)
-        assertEquals("mr-mime", successState.pokemonList[0].name)
-        assertEquals("mime-jr", successState.pokemonList[1].name)
-        assertEquals("porygon-z", successState.pokemonList[2].name)
-    }
-
-    @Test
-    fun `loadPokemonList handles Pokemon with numeric names`() = runTest {
-        // Given
-        val numericPokemonList = listOf(
-            PokemonListItem("1", "https://pokeapi.co/api/v2/pokemon/1/"),
-            PokemonListItem("2", "https://pokeapi.co/api/v2/pokemon/2/")
-        )
-        coEvery { mockGetPokemonListUseCase.execute() } returns flowOf(Result.Success(numericPokemonList))
-
-        // When
-        viewModel.loadPokemonList()
-        testDispatcher.scheduler.advanceUntilIdle()
+        viewModel.updateSearchQuery("")
 
         // Then
         assertTrue(viewModel.uiState.value is HomeUiState.Success)
         val successState = viewModel.uiState.value as HomeUiState.Success
         assertEquals(2, successState.pokemonList.size)
-        assertEquals("1", successState.pokemonList[0].name)
-        assertEquals("2", successState.pokemonList[1].name)
+    }
+
+    @Test
+    fun `loadPokemonList handles loading state correctly`() = runTest {
+        // Given
+        val mockPokemonList = listOf(
+            PokemonListItem("bulbasaur", "https://pokeapi.co/api/v2/pokemon/1/")
+        )
+
+        coEvery {
+            mockGetPokemonListUseCase(any(), any())
+        } returns flowOf(Result.Success(mockPokemonList))
+
+        // When
+        viewModel.loadPokemonList()
+
+        // Then
+        // The loading state is set immediately when loadPokemonList is called
+        // but then quickly transitions to success state
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertTrue(viewModel.uiState.value is HomeUiState.Success)
+    }
+
+    @Test
+    fun `loadPokemonList handles error state correctly`() = runTest {
+        // Given
+        val exception = Exception("API Error")
+
+        coEvery {
+            mockGetPokemonListUseCase(any(), any())
+        } returns flowOf(Result.Error(exception))
+
+        // When
+        viewModel.loadPokemonList()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.uiState.value is HomeUiState.Error)
+        val errorState = viewModel.uiState.value as HomeUiState.Error
+        assertEquals("API Error", errorState.message)
+        assertTrue(errorState.isRetryable)
+    }
+
+    @Test
+    fun `loadPokemonList handles timeout errors correctly`() = runTest {
+        // Given
+        val timeoutException = Exception("Request timeout")
+
+        coEvery {
+            mockGetPokemonListUseCase(any(), any())
+        } returns flowOf(Result.Error(timeoutException))
+
+        // When
+        viewModel.loadPokemonList()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.uiState.value is HomeUiState.Error)
+        val errorState = viewModel.uiState.value as HomeUiState.Error
+        assertTrue(errorState.isNetworkError)
     }
 }

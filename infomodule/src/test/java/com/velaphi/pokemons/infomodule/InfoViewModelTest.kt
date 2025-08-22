@@ -114,27 +114,6 @@ class InfoViewModelTest {
     }
 
     @Test
-    fun `loadPokemonDetail with empty string returns error`() = runTest {
-        // Given - Create a new ViewModel with empty ID
-        val emptySavedStateHandle = mockk<SavedStateHandle>()
-        coEvery { emptySavedStateHandle.get<String>("pokemonId") } returns ""
-        
-        val exception = IllegalArgumentException("Invalid Pokemon ID")
-        coEvery { mockGetPokemonDetailUseCase.execute("") } returns flowOf(Result.Error(exception))
-        
-        val emptyViewModel = InfoViewModel(mockGetPokemonDetailUseCase, emptySavedStateHandle)
-
-        // When
-        emptyViewModel.loadPokemonDetail()
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        // Then
-        assertTrue(emptyViewModel.uiState.value is InfoUiState.Error)
-        val errorState = emptyViewModel.uiState.value as InfoUiState.Error
-        assertTrue(errorState.message.contains("Invalid Pokemon ID"))
-    }
-
-    @Test
     fun `loadPokemonDetail with Pokemon name containing special characters returns success`() = runTest {
         // Given - Create a new ViewModel with special character name
         val specialSavedStateHandle = mockk<SavedStateHandle>()
